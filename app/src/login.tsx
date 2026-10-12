@@ -49,9 +49,13 @@ export function useLogin(): Login {
   const signer = authenticated ? wallets.find((w) => w.standardWallet.name === "Privy") ?? wallets[0] : undefined;
   const address = authenticated ? (linked && "address" in linked ? linked.address : signer?.address) : undefined;
 
-  // Always sign with the latest signing wallet, while keeping the AnchorWallet stable per address.
+  // Always sign with the latest signing wallet and function, while keeping the AnchorWallet stable
+  // per address. Privy may hand out new copies of both on every render; if the wallet changed with
+  // them, every page load would restart before it could finish.
   const latest = useRef<ConnectedStandardSolanaWallet | undefined>(signer);
   latest.current = signer;
+  const signRef = useRef(signTransaction);
+  signRef.current = signTransaction;
 
   const wallet = useMemo<AnchorWallet | undefined>(() => {
     if (!address) return undefined;
@@ -63,7 +67,7 @@ export function useLogin(): Login {
     const sign = async <T extends AnyTx>(tx: T): Promise<T> => {
       const bytes =
         tx instanceof VersionedTransaction ? tx.serialize() : tx.serialize({ requireAllSignatures: false, verifySignatures: false });
-      const { signedTransaction } = await signTransaction({
+      const { signedTransaction } = await signRef.current({
         transaction: bytes,
         wallet: await waitForSigner(),
         chain: CHAIN,
@@ -80,7 +84,7 @@ export function useLogin(): Login {
         return out;
       },
     };
-  }, [address, signTransaction]);
+  }, [address]);
 
   return {
     ready,

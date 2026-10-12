@@ -85,6 +85,8 @@ export function HonorProvider({ children }: { children: ReactNode }) {
     return makeSponsor(connection, wallet, new PublicKey(plays.bank), () => tokenRef.current());
   }, [wallet, connection, lookupBank]);
   const program = useMemo(() => makeProgram(connection, wallet, getSponsor), [connection, wallet, getSponsor]);
+  const programRef = useRef(program);
+  programRef.current = program;
 
   // Tagged with its owner, so switching accounts never shows the previous player's profile.
   const [loaded, setLoaded] = useState<{ owner: string; profile: Profile | null } | null>(null);
@@ -107,13 +109,13 @@ export function HonorProvider({ children }: { children: ReactNode }) {
     let live = true;
     if (!me) return;
     const owner = me.toBase58();
-    fetchProfile(program, me)
+    fetchProfile(programRef.current, me)
       .then((p) => live && setLoaded({ owner, profile: p }))
       .catch(() => live && setLoaded((l) => (l?.owner === owner ? l : { owner, profile: null })));
     return () => {
       live = false;
     };
-  }, [program, me, version]);
+  }, [me, version]);
 
   const toast = useCallback((t: Omit<Toast, "id">, ms = 0) => {
     const id = Date.now() + Math.random();
@@ -161,6 +163,9 @@ export function useHonor() {
  */
 export function useLoad<T>(fn: (p: HonorProgram) => Promise<T>, deps: unknown[]): { data: T | undefined; error: string | null } {
   const { program, me, version } = useHonor();
+  // Only the page (deps), the player and refreshes restart a load, never a rebuilt program object.
+  const programRef = useRef(program);
+  programRef.current = program;
   const key = JSON.stringify([me?.toBase58() ?? null, ...deps]);
   const [state, setState] = useState<{ key: string; data?: T; error: string | null } | null>(null);
   useEffect(() => {
@@ -168,7 +173,7 @@ export function useLoad<T>(fn: (p: HonorProgram) => Promise<T>, deps: unknown[])
     let timer: ReturnType<typeof setTimeout>;
     // The free public RPC rate-limits heavy reads; back off and retry before showing an error.
     const attempt = (n: number) =>
-      fn(program)
+      fn(programRef.current)
         .then((d) => live && setState({ key, data: d, error: null }))
         .catch((e) => {
           if (!live) return;
@@ -184,7 +189,7 @@ export function useLoad<T>(fn: (p: HonorProgram) => Promise<T>, deps: unknown[])
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [program, version, key]);
+  }, [version, key]);
   return state?.key === key ? { data: state.data, error: state.error } : { data: undefined, error: null };
 }
 
