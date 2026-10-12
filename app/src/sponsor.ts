@@ -16,6 +16,8 @@ export const DAILY_LIMITS = rules.dailyLimits as Record<string, number>;
 const ENDPOINT = "/.netlify/functions/sponsor";
 
 export type FreePlays = { bank: string; used: Record<string, number>; limits: Record<string, number> };
+/** Free plays, or why the bank couldn't be reached. */
+export type FreePlaysResult = FreePlays | { error: string };
 export type Sponsor = (tx: Transaction) => Promise<string>;
 type ProviderWallet = ConstructorParameters<typeof AnchorProvider>[1];
 
@@ -26,12 +28,19 @@ const hex = (b: ArrayLike<number>) => Array.from(b, (x) => x.toString(16).padSta
 const KIND_BY_DISC = Object.fromEntries(idl.instructions.map((ix) => [hex(ix.discriminator), ix.name]));
 const SIZES = rules.createdAccountSizes as Record<string, number[]>;
 
-export async function fetchFreePlays(token: string | null): Promise<FreePlays | null> {
-  try {
-    const res = await fetch(ENDPOINT, { headers: { Authorization: `Bearer ${token}` } });
-    return res.ok ? ((await res.json()) as FreePlays) : null;
-  } catch {
-    return null; // no bank available (e.g. plain local dev): players pay their own way
+export async function fetchFreePlays(token: string | null): Promise<FreePlaysResult> {
+  if (!token) return { error: "Not signed in yet." };
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(ENDPOINT, { headers: { Authorization: `Bearer ${token}` } });
+      const body = (await res.json().catch(() => null)) as (FreePlays & { error?: string }) | null;
+      if (res.ok && body?.bank) return body;
+      if (attempt < 2 && res.status >= 500) throw new Error(`bank ${res.status}`);
+      return { error: body?.error ?? `The game's bank answered ${res.status}.` };
+    } catch (e) {
+      if (attempt >= 2) return { error: `Couldn't reach the game's bank (${String((e as Error).message ?? e)}).` };
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    }
   }
 }
 
@@ -68,14 +77,17 @@ export function makeSponsor(connection: Connection, wallet: AnchorWallet, bank: 
 
 /** Anchor provider that hands transactions to the bank when the player can't pay for them. */
 export class GameProvider extends AnchorProvider {
-  constructor(connection: Connection, wallet: ProviderWallet, opts: ConfirmOptions, private sponsor?: Sponsor) {
+  constructor(connection: Connection, wallet: ProviderWallet, opts: ConfirmOptions, private sponsor?: Sponsor, private bankError?: string) {
     super(connection, wallet, opts);
   }
 
   async sendAndConfirm(tx: Transaction | VersionedTransaction, signers?: Signer[], opts?: ConfirmOptions): Promise<string> {
-    if (this.sponsor && tx instanceof Transaction && !signers?.length) {
+    if (tx instanceof Transaction && !signers?.length) {
       const balance = await this.connection.getBalance(this.wallet.publicKey);
-      if (balance < SELF_PAY_LAMPORTS) return this.sponsor(tx);
+      if (balance < SELF_PAY_LAMPORTS) {
+        if (this.sponsor) return this.sponsor(tx);
+        throw new Error(this.bankError ?? "Couldn't reach the game's bank. Refresh the page and try again.");
+      }
     }
     return super.sendAndConfirm(tx, signers, opts);
   }

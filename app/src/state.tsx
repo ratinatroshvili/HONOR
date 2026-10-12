@@ -16,6 +16,8 @@ type Ctx = {
   profile: Profile | null | undefined; // undefined = still loading
   /** Today's free plays from the bank, or null if the bank isn't reachable. */
   freePlays: FreePlays | null;
+  /** Why the bank couldn't be reached, if it couldn't. */
+  bankError: string | null;
   /** The player's own SOL balance in lamports. */
   balance: number | null;
   version: number; // bumps after every successful action, so views reload
@@ -39,11 +41,21 @@ export function HonorProvider({ children }: { children: ReactNode }) {
   const tokenRef = useRef(auth.getAccessToken);
   tokenRef.current = auth.getAccessToken;
   const [freePlays, setFreePlays] = useState<FreePlays | null>(null);
+  const [bankError, setBankError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   useEffect(() => {
     let live = true;
     if (!me) return;
-    tokenRef.current().then(fetchFreePlays).then((f) => live && setFreePlays(f));
+    tokenRef.current()
+      .then(fetchFreePlays)
+      .then((f) => {
+        if (!live) return;
+        if ("error" in f) setBankError(f.error);
+        else {
+          setFreePlays(f);
+          setBankError(null);
+        }
+      });
     connection.getBalance(me).then((b) => live && setBalance(b), () => {});
     return () => {
       live = false;
@@ -55,7 +67,10 @@ export function HonorProvider({ children }: { children: ReactNode }) {
     () => (wallet && bank ? makeSponsor(connection, wallet, new PublicKey(bank), () => tokenRef.current()) : undefined),
     [connection, wallet, bank],
   );
-  const program = useMemo(() => makeProgram(connection, wallet, sponsor), [connection, wallet, sponsor]);
+  const program = useMemo(
+    () => makeProgram(connection, wallet, sponsor, bankError ?? undefined),
+    [connection, wallet, sponsor, bankError],
+  );
 
   // Tagged with its owner, so switching accounts never shows the previous player's profile.
   const [loaded, setLoaded] = useState<{ owner: string; profile: Profile | null } | null>(null);
@@ -113,7 +128,7 @@ export function HonorProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <HonorCtx.Provider value={{ auth, program, me, profile, freePlays, balance, version, refresh, run, busy, toasts }}>
+    <HonorCtx.Provider value={{ auth, program, me, profile, freePlays, bankError, balance, version, refresh, run, busy, toasts }}>
       {children}
     </HonorCtx.Provider>
   );

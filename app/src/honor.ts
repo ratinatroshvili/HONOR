@@ -29,7 +29,7 @@ export const RULES = {
 
 export type HonorProgram = Program<Honor>;
 
-export function makeProgram(connection: Connection, wallet: AnchorWallet | undefined, sponsor?: Sponsor): HonorProgram {
+export function makeProgram(connection: Connection, wallet: AnchorWallet | undefined, sponsor?: Sponsor, bankError?: string): HonorProgram {
   const w =
     wallet ??
     ({
@@ -41,7 +41,7 @@ export function makeProgram(connection: Connection, wallet: AnchorWallet | undef
         throw new Error("Connect a wallet first");
       },
     } as AnchorWallet);
-  const provider = new GameProvider(connection, w, { commitment: "confirmed" }, wallet ? sponsor : undefined);
+  const provider = new GameProvider(connection, w, { commitment: "confirmed" }, wallet ? sponsor : undefined, bankError);
   return new Program<Honor>(idl as Honor, provider);
 }
 

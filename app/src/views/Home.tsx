@@ -223,7 +223,7 @@ const PLAYS: [string, string, string][] = [
 /** Free plays from the game's bank, and topping up your own game wallet with Phantom. */
 function Purse() {
   const { connection } = useConnection();
-  const { me, freePlays, balance, run, busy } = useHonor();
+  const { me, freePlays, bankError, balance, run, busy } = useHonor();
   const now = useNow(60000);
   const [amount, setAmount] = useState(0.1);
   const selfPaying = balance !== null && balance >= SELF_PAY_LAMPORTS;
@@ -259,7 +259,7 @@ function Purse() {
           })}
         </ul>
       ) : (
-        <p className="muted">Free plays aren't available right now.</p>
+        <p className="error">Free plays aren't available right now. {bankError}</p>
       )}
       <p className="muted small">
         Voting on results, proof and reviews are always free. Want more bets? Add SOL to your game wallet with Phantom, and you
