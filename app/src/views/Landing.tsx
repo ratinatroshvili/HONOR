@@ -32,9 +32,7 @@ export function Landing({ joining }: { joining: boolean }) {
               <GoogleMark />
               {joining ? "Continue with Google to join" : "Continue with Google"}
             </button>
-          </div>
-          <p className="muted small">Free to play. No wallet, no crypto, no setup: just your Google account.</p>
-        </div>
+          </div>        </div>
         <div className="hero-art" aria-hidden>
           <div className="hero-glow" />
           <Knight rank="grandmaster" size={300} />
