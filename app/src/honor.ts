@@ -4,6 +4,7 @@ import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import idl from "./idl/honor.json";
 import type { Honor } from "./idl/honor-types";
+import { HIDDEN_PLAYERS } from "./hidden";
 
 export const PROGRAM_ID = new PublicKey(idl.address);
 export const CLUSTER = (import.meta.env.VITE_CLUSTER as string) || "devnet";
@@ -108,9 +109,10 @@ export async function fetchProfile(p: HonorProgram, user: PublicKey) {
   return p.account.profile.fetchNullable(addr.profile(user));
 }
 
-/** Every player, for the global leaderboards. */
+/** Every player for the global leaderboards, minus the ones hidden in hidden.ts. */
 export async function fetchAllProfiles(p: HonorProgram): Promise<With<Profile>[]> {
-  return p.account.profile.all();
+  const all = await p.account.profile.all();
+  return all.filter((x) => !HIDDEN_PLAYERS.has(x.account.authority.toBase58()));
 }
 
 /** Groups the user belongs to, newest first. */
