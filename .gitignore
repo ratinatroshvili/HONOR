@@ -1,0 +1,8 @@
+# Build output and program keypairs (keypairs are private: never commit them)
+target/
+tests-rust/target
+.anchor
+# Old v1 build of the site; the live site is built from app/
+website/
+node_modules
+.DS_Store

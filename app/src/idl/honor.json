@@ -1,0 +1,1313 @@
+{
+  "address": "6xEqRDwzB6jNYostdTKeCpft75QAvAZF2T7TPm8MgD6q",
+  "metadata": {
+    "name": "honor",
+    "version": "0.2.0",
+    "spec": "0.1.0",
+    "description": "HONOR: social prediction game with on-chain, non-transferable points"
+  },
+  "instructions": [
+    {
+      "name": "archive_group",
+      "discriminator": [
+        85,
+        152,
+        41,
+        163,
+        1,
+        54,
+        117,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "group",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "buy_shield",
+      "discriminator": [
+        126,
+        178,
+        228,
+        114,
+        204,
+        129,
+        204,
+        181
+      ],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_group",
+      "discriminator": [
+        79,
+        60,
+        158,
+        134,
+        61,
+        199,
+        56,
+        248
+      ],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "group",
+          "writable": true
+        },
+        {
+          "name": "membership",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "invite_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "create_profile",
+      "discriminator": [
+        225,
+        205,
+        234,
+        143,
+        17,
+        186,
+        50,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "first_name",
+          "type": "string"
+        },
+        {
+          "name": "last_name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "create_round",
+      "discriminator": [
+        229,
+        218,
+        236,
+        169,
+        231,
+        80,
+        134,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "group",
+          "writable": true
+        },
+        {
+          "name": "membership"
+        },
+        {
+          "name": "round",
+          "writable": true
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "question",
+          "type": "string"
+        },
+        {
+          "name": "options",
+          "type": {
+            "vec": "string"
+          }
+        },
+        {
+          "name": "challenge",
+          "type": "string"
+        },
+        {
+          "name": "evidence",
+          "type": {
+            "defined": {
+              "name": "EvidenceKind"
+            }
+          }
+        },
+        {
+          "name": "votes_close_at",
+          "type": "i64"
+        },
+        {
+          "name": "resolve_window_secs",
+          "type": "i64"
+        },
+        {
+          "name": "challenge_window_secs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "decline_challenge",
+      "discriminator": [
+        27,
+        25,
+        221,
+        101,
+        148,
+        17,
+        247,
+        13
+      ],
+      "accounts": [
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "membership",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "expire_challenge",
+      "discriminator": [
+        73,
+        82,
+        20,
+        227,
+        216,
+        66,
+        58,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "membership",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "finalize_outcome",
+      "discriminator": [
+        122,
+        242,
+        226,
+        81,
+        187,
+        211,
+        79,
+        179
+      ],
+      "accounts": [
+        {
+          "name": "round",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "join_group",
+      "discriminator": [
+        121,
+        56,
+        199,
+        19,
+        250,
+        70,
+        44,
+        184
+      ],
+      "accounts": [
+        {
+          "name": "group",
+          "writable": true
+        },
+        {
+          "name": "profile"
+        },
+        {
+          "name": "membership",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "invite_code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "predict",
+      "discriminator": [
+        254,
+        114,
+        112,
+        244,
+        37,
+        49,
+        32,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "round",
+          "writable": true
+        },
+        {
+          "name": "membership"
+        },
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "choice",
+          "type": "u8"
+        },
+        {
+          "name": "confidence",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "review_proof",
+      "discriminator": [
+        248,
+        58,
+        119,
+        171,
+        49,
+        174,
+        11,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "group"
+        },
+        {
+          "name": "reviewer_membership",
+          "writable": true
+        },
+        {
+          "name": "reviewer_profile",
+          "writable": true
+        },
+        {
+          "name": "user_profile",
+          "writable": true
+        },
+        {
+          "name": "user_membership",
+          "writable": true
+        },
+        {
+          "name": "review",
+          "writable": true
+        },
+        {
+          "name": "reviewer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "approve",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "rotate_invite",
+      "discriminator": [
+        68,
+        40,
+        141,
+        217,
+        173,
+        146,
+        215,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "group",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "invite_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "settle_prediction",
+      "discriminator": [
+        201,
+        129,
+        177,
+        154,
+        16,
+        155,
+        48,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "round"
+        },
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "membership",
+          "writable": true
+        },
+        {
+          "name": "cranker",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "submit_proof",
+      "discriminator": [
+        54,
+        241,
+        46,
+        84,
+        4,
+        212,
+        46,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "group"
+        },
+        {
+          "name": "user",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "proof_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "proof_uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "use_shield",
+      "discriminator": [
+        81,
+        66,
+        228,
+        245,
+        138,
+        95,
+        252,
+        140
+      ],
+      "accounts": [
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "profile",
+          "writable": true
+        },
+        {
+          "name": "membership",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "vote_outcome",
+      "discriminator": [
+        59,
+        39,
+        35,
+        227,
+        240,
+        234,
+        137,
+        103
+      ],
+      "accounts": [
+        {
+          "name": "round",
+          "writable": true
+        },
+        {
+          "name": "prediction",
+          "writable": true
+        },
+        {
+          "name": "user",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "outcome",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Group",
+      "discriminator": [
+        209,
+        249,
+        208,
+        63,
+        182,
+        89,
+        186,
+        254
+      ]
+    },
+    {
+      "name": "Membership",
+      "discriminator": [
+        231,
+        141,
+        180,
+        98,
+        109,
+        168,
+        175,
+        166
+      ]
+    },
+    {
+      "name": "Prediction",
+      "discriminator": [
+        98,
+        127,
+        141,
+        187,
+        218,
+        33,
+        8,
+        14
+      ]
+    },
+    {
+      "name": "Profile",
+      "discriminator": [
+        184,
+        101,
+        165,
+        188,
+        95,
+        63,
+        127,
+        188
+      ]
+    },
+    {
+      "name": "ProofReview",
+      "discriminator": [
+        81,
+        230,
+        225,
+        13,
+        75,
+        38,
+        59,
+        70
+      ]
+    },
+    {
+      "name": "Round",
+      "discriminator": [
+        87,
+        127,
+        165,
+        51,
+        73,
+        78,
+        116,
+        174
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidName",
+      "msg": "Names must be 1-32 characters"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidQuestion",
+      "msg": "Question must be 1-140 characters"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidOptions",
+      "msg": "A round needs 2-4 options, each 1-32 characters"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidChallenge",
+      "msg": "Challenge must be 1-100 characters"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidWindow",
+      "msg": "Time window is out of range"
+    },
+    {
+      "code": 6005,
+      "name": "DeadlineInPast",
+      "msg": "Voting deadline must be in the future"
+    },
+    {
+      "code": 6006,
+      "name": "WrongInviteCode",
+      "msg": "Wrong invite code"
+    },
+    {
+      "code": 6007,
+      "name": "GroupArchived",
+      "msg": "This group has been removed"
+    },
+    {
+      "code": 6008,
+      "name": "NeedMoreMembers",
+      "msg": "Invite at least one friend before starting a round"
+    },
+    {
+      "code": 6009,
+      "name": "VotingClosed",
+      "msg": "Voting for this round is closed"
+    },
+    {
+      "code": 6010,
+      "name": "VotingStillOpen",
+      "msg": "Voting is still open"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidChoice",
+      "msg": "Not a valid option"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidConfidence",
+      "msg": "Confidence must be between 0 and 100"
+    },
+    {
+      "code": 6013,
+      "name": "WrongRoundStatus",
+      "msg": "The round is not in the right state for this action"
+    },
+    {
+      "code": 6014,
+      "name": "ResultVoteClosed",
+      "msg": "The result vote has ended"
+    },
+    {
+      "code": 6015,
+      "name": "ResultVoteOpen",
+      "msg": "The result vote is still running"
+    },
+    {
+      "code": 6016,
+      "name": "AlreadyVoted",
+      "msg": "You already voted on the result"
+    },
+    {
+      "code": 6017,
+      "name": "WrongChallengeStatus",
+      "msg": "This prediction is not in the right state for this action"
+    },
+    {
+      "code": 6018,
+      "name": "ChallengeDeadlinePassed",
+      "msg": "Challenge deadline has passed"
+    },
+    {
+      "code": 6019,
+      "name": "ChallengeDeadlineNotReached",
+      "msg": "Challenge deadline has not passed yet"
+    },
+    {
+      "code": 6020,
+      "name": "TooManyAttempts",
+      "msg": "No proof attempts left for this challenge"
+    },
+    {
+      "code": 6021,
+      "name": "CannotReviewOwnProof",
+      "msg": "You cannot review your own proof"
+    },
+    {
+      "code": 6022,
+      "name": "NotEnoughPoints",
+      "msg": "Not enough Prediction Points"
+    },
+    {
+      "code": 6023,
+      "name": "NoShields",
+      "msg": "No shields left"
+    },
+    {
+      "code": 6024,
+      "name": "ProofUriTooLong",
+      "msg": "Proof link is too long"
+    },
+    {
+      "code": 6025,
+      "name": "EmptyProofHash",
+      "msg": "Proof hash cannot be empty"
+    },
+    {
+      "code": 6026,
+      "name": "Overflow",
+      "msg": "Math overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "ChallengeStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Unsettled"
+          },
+          {
+            "name": "Won"
+          },
+          {
+            "name": "Pending"
+          },
+          {
+            "name": "ProofSubmitted"
+          },
+          {
+            "name": "Completed"
+          },
+          {
+            "name": "Failed"
+          },
+          {
+            "name": "Declined"
+          },
+          {
+            "name": "Shielded"
+          },
+          {
+            "name": "Void"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EvidenceKind",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "GroupVote"
+          },
+          {
+            "name": "AiCheck"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Group",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "group_id",
+            "type": "u64"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "invite_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "member_count",
+            "type": "u32"
+          },
+          {
+            "name": "round_count",
+            "type": "u64"
+          },
+          {
+            "name": "archived",
+            "type": "bool"
+          },
+          {
+            "name": "archived_at",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Membership",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "prediction_points",
+            "type": "u64"
+          },
+          {
+            "name": "honor_points",
+            "type": "i64"
+          },
+          {
+            "name": "joined_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prediction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "round",
+            "type": "pubkey"
+          },
+          {
+            "name": "group",
+            "type": "pubkey"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "choice",
+            "type": "u8"
+          },
+          {
+            "name": "confidence",
+            "type": "u8"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "outcome_vote",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "ChallengeStatus"
+              }
+            }
+          },
+          {
+            "name": "points_awarded",
+            "type": "u64"
+          },
+          {
+            "name": "challenge_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "proof_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proof_uri",
+            "type": "string"
+          },
+          {
+            "name": "proof_submitted_at",
+            "type": "i64"
+          },
+          {
+            "name": "review_round",
+            "type": "u8"
+          },
+          {
+            "name": "approvals",
+            "type": "u16"
+          },
+          {
+            "name": "rejections",
+            "type": "u16"
+          },
+          {
+            "name": "approvals_needed",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Profile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "first_name",
+            "type": "string"
+          },
+          {
+            "name": "last_name",
+            "type": "string"
+          },
+          {
+            "name": "prediction_points",
+            "type": "u64"
+          },
+          {
+            "name": "lifetime_prediction_points",
+            "type": "u64"
+          },
+          {
+            "name": "honor_points",
+            "type": "i64"
+          },
+          {
+            "name": "correct_predictions",
+            "type": "u32"
+          },
+          {
+            "name": "wrong_predictions",
+            "type": "u32"
+          },
+          {
+            "name": "challenges_completed",
+            "type": "u32"
+          },
+          {
+            "name": "challenges_failed",
+            "type": "u32"
+          },
+          {
+            "name": "challenges_declined",
+            "type": "u32"
+          },
+          {
+            "name": "challenges_shielded",
+            "type": "u32"
+          },
+          {
+            "name": "fair_play_actions",
+            "type": "u32"
+          },
+          {
+            "name": "current_streak",
+            "type": "u32"
+          },
+          {
+            "name": "best_streak",
+            "type": "u32"
+          },
+          {
+            "name": "shields",
+            "type": "u8"
+          },
+          {
+            "name": "groups_created",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProofReview",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "prediction",
+            "type": "pubkey"
+          },
+          {
+            "name": "reviewer",
+            "type": "pubkey"
+          },
+          {
+            "name": "review_round",
+            "type": "u8"
+          },
+          {
+            "name": "approve",
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Round",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "group",
+            "type": "pubkey"
+          },
+          {
+            "name": "round_id",
+            "type": "u64"
+          },
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "options",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "challenge",
+            "type": "string"
+          },
+          {
+            "name": "evidence",
+            "type": {
+              "defined": {
+                "name": "EvidenceKind"
+              }
+            }
+          },
+          {
+            "name": "votes_close_at",
+            "type": "i64"
+          },
+          {
+            "name": "resolve_window_secs",
+            "type": "i64"
+          },
+          {
+            "name": "challenge_window_secs",
+            "type": "i64"
+          },
+          {
+            "name": "votes",
+            "type": {
+              "array": [
+                "u32",
+                4
+              ]
+            }
+          },
+          {
+            "name": "confidence_sum",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "total_votes",
+            "type": "u32"
+          },
+          {
+            "name": "outcome_votes",
+            "type": {
+              "array": [
+                "u32",
+                4
+              ]
+            }
+          },
+          {
+            "name": "outcome_vote_count",
+            "type": "u32"
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "RoundStatus"
+              }
+            }
+          },
+          {
+            "name": "outcome",
+            "type": "u8"
+          },
+          {
+            "name": "resolved_at",
+            "type": "i64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RoundStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Resolved"
+          },
+          {
+            "name": "Void"
+          }
+        ]
+      }
+    }
+  ]
+}

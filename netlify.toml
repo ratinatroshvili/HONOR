@@ -1,0 +1,9 @@
+# Netlify builds the web app from app/ on every push.
+[build]
+  base = "app"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  VITE_CLUSTER = "devnet"

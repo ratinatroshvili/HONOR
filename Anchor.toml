@@ -1,0 +1,19 @@
+[toolchain]
+anchor_version = "0.32.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+honor = "6xEqRDwzB6jNYostdTKeCpft75QAvAZF2T7TPm8MgD6q"
+
+[programs.devnet]
+honor = "6xEqRDwzB6jNYostdTKeCpft75QAvAZF2T7TPm8MgD6q"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cd tests-rust && cargo test -- --nocapture"
