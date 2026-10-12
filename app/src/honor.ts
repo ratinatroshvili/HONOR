@@ -5,7 +5,7 @@ import { Connection, PublicKey, Transaction, TransactionInstruction } from "@sol
 import idl from "./idl/honor.json";
 import type { Honor } from "./idl/honor-types";
 import { HIDDEN_PLAYERS } from "./hidden";
-import { GameProvider, type Sponsor } from "./sponsor";
+import { GameProvider, type GetSponsor } from "./sponsor";
 
 export const PROGRAM_ID = new PublicKey(idl.address);
 export const CLUSTER = (import.meta.env.VITE_CLUSTER as string) || "devnet";
@@ -29,7 +29,7 @@ export const RULES = {
 
 export type HonorProgram = Program<Honor>;
 
-export function makeProgram(connection: Connection, wallet: AnchorWallet | undefined, sponsor?: Sponsor, bankError?: string): HonorProgram {
+export function makeProgram(connection: Connection, wallet: AnchorWallet | undefined, getSponsor?: GetSponsor): HonorProgram {
   const w =
     wallet ??
     ({
@@ -41,7 +41,7 @@ export function makeProgram(connection: Connection, wallet: AnchorWallet | undef
         throw new Error("Connect a wallet first");
       },
     } as AnchorWallet);
-  const provider = new GameProvider(connection, w, { commitment: "confirmed" }, wallet ? sponsor : undefined, bankError);
+  const provider = new GameProvider(connection, w, { commitment: "confirmed" }, wallet ? getSponsor : undefined);
   return new Program<Honor>(idl as Honor, provider);
 }
 

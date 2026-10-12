@@ -13,12 +13,15 @@ import rules from "./sponsor-rules.json";
 /** Players holding at least this much (0.01 SOL) pay for themselves; below it the bank steps in. */
 export const SELF_PAY_LAMPORTS = 0.01 * LAMPORTS_PER_SOL;
 export const DAILY_LIMITS = rules.dailyLimits as Record<string, number>;
-const ENDPOINT = "/.netlify/functions/sponsor";
+// Neutral name on purpose: ad blockers block URLs containing words like "sponsor".
+const ENDPOINT = "/.netlify/functions/play";
 
 export type FreePlays = { bank: string; used: Record<string, number>; limits: Record<string, number> };
 /** Free plays, or why the bank couldn't be reached. */
 export type FreePlaysResult = FreePlays | { error: string };
 export type Sponsor = (tx: Transaction) => Promise<string>;
+/** Looks up the bank when needed: a sponsor, or the reason the bank can't be used. */
+export type GetSponsor = () => Promise<Sponsor | string>;
 type ProviderWallet = ConstructorParameters<typeof AnchorProvider>[1];
 
 /** Thrown when today's free plays for an action are used up. */
@@ -77,7 +80,7 @@ export function makeSponsor(connection: Connection, wallet: AnchorWallet, bank: 
 
 /** Anchor provider that hands transactions to the bank when the player can't pay for them. */
 export class GameProvider extends AnchorProvider {
-  constructor(connection: Connection, wallet: ProviderWallet, opts: ConfirmOptions, private sponsor?: Sponsor, private bankError?: string) {
+  constructor(connection: Connection, wallet: ProviderWallet, opts: ConfirmOptions, private getSponsor?: GetSponsor) {
     super(connection, wallet, opts);
   }
 
@@ -85,8 +88,9 @@ export class GameProvider extends AnchorProvider {
     if (tx instanceof Transaction && !signers?.length) {
       const balance = await this.connection.getBalance(this.wallet.publicKey);
       if (balance < SELF_PAY_LAMPORTS) {
-        if (this.sponsor) return this.sponsor(tx);
-        throw new Error(this.bankError ?? "Couldn't reach the game's bank. Refresh the page and try again.");
+        const sponsor = this.getSponsor ? await this.getSponsor() : "Couldn't reach the game's bank.";
+        if (typeof sponsor === "string") throw new Error(sponsor);
+        return sponsor(tx);
       }
     }
     return super.sendAndConfirm(tx, signers, opts);

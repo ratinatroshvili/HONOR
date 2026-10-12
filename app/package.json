@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build && npm run build:functions",
     "preview": "vite preview",
-    "build:functions": "esbuild netlify/functions/sponsor.mjs --bundle --platform=node --format=esm --target=node18 \"--banner:js=import{createRequire as __cr}from'node:module';const require=__cr(import.meta.url);\" --outfile=netlify/functions-dist/sponsor.mjs --log-level=warning"
+    "build:functions": "esbuild netlify/functions/sponsor.mjs --bundle --platform=node --format=esm --target=node18 \"--banner:js=import{createRequire as __cr}from'node:module';const require=__cr(import.meta.url);\" --outfile=netlify/functions-dist/play.mjs --log-level=warning"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",

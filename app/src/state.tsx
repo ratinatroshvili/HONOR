@@ -5,7 +5,7 @@ import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { errorMessage, fetchProfile, makeProgram, type HonorProgram, type Profile } from "./honor";
 import { useLogin, type Login } from "./login";
-import { fetchFreePlays, makeSponsor, type FreePlays } from "./sponsor";
+import { fetchFreePlays, makeSponsor, type FreePlays, type FreePlaysResult, type Sponsor } from "./sponsor";
 
 type Toast = { id: number; kind: "busy" | "ok" | "error"; text: string };
 
@@ -43,34 +43,48 @@ export function HonorProvider({ children }: { children: ReactNode }) {
   const [freePlays, setFreePlays] = useState<FreePlays | null>(null);
   const [bankError, setBankError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
-  useEffect(() => {
-    let live = true;
-    if (!me) return;
-    tokenRef.current()
+  const freePlaysRef = useRef<FreePlays | null>(null);
+  freePlaysRef.current = freePlays;
+  // One bank lookup at a time; actions wait for it instead of failing while it's in flight.
+  const lookup = useRef<Promise<FreePlaysResult> | null>(null);
+  const lookupBank = useCallback(() => {
+    lookup.current ??= tokenRef
+      .current()
       .then(fetchFreePlays)
       .then((f) => {
-        if (!live) return;
         if ("error" in f) setBankError(f.error);
         else {
           setFreePlays(f);
           setBankError(null);
         }
+        return f;
+      })
+      .finally(() => {
+        lookup.current = null;
       });
+    return lookup.current;
+  }, []);
+  useEffect(() => {
+    if (!me) return;
+    lookupBank();
+    let live = true;
     connection.getBalance(me).then((b) => live && setBalance(b), () => {});
     return () => {
       live = false;
     };
-  }, [me, connection, version]);
+  }, [me, connection, version, lookupBank]);
 
-  const bank = freePlays?.bank ?? null;
-  const sponsor = useMemo(
-    () => (wallet && bank ? makeSponsor(connection, wallet, new PublicKey(bank), () => tokenRef.current()) : undefined),
-    [connection, wallet, bank],
-  );
-  const program = useMemo(
-    () => makeProgram(connection, wallet, sponsor, bankError ?? undefined),
-    [connection, wallet, sponsor, bankError],
-  );
+  const getSponsor = useCallback(async (): Promise<Sponsor | string> => {
+    if (!wallet) return "Sign in first.";
+    let plays = freePlaysRef.current;
+    if (!plays) {
+      const r = await lookupBank();
+      if ("error" in r) return r.error;
+      plays = r;
+    }
+    return makeSponsor(connection, wallet, new PublicKey(plays.bank), () => tokenRef.current());
+  }, [wallet, connection, lookupBank]);
+  const program = useMemo(() => makeProgram(connection, wallet, getSponsor), [connection, wallet, getSponsor]);
 
   // Tagged with its owner, so switching accounts never shows the previous player's profile.
   const [loaded, setLoaded] = useState<{ owner: string; profile: Profile | null } | null>(null);
