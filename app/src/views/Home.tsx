@@ -121,7 +121,7 @@ export function Home() {
           disabled={busy || p.predictionPoints.toNumber() < RULES.shieldCost}
           onClick={() => run("Forging a shield…", "Shield ready. Use it to skip one challenge.", () => actions.buyShield(program, me!))}
         >
-          Buy a shield
+          <span className="coin" aria-hidden /> Buy a shield for {RULES.shieldCost} Prediction Points
         </button>
       </section>
 
