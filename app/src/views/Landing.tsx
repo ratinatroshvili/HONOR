@@ -1,6 +1,6 @@
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Knight } from "../Knight";
 import { RANKS } from "../ranks";
+import { useHonor } from "../state";
 
 const STEPS = [
   ["Ask the question", "“Will we finish the project by Friday?” Pick the options and the challenge the wrong side owes."],
@@ -11,6 +11,7 @@ const STEPS = [
 ];
 
 export function Landing({ joining }: { joining: boolean }) {
+  const { auth } = useHonor();
   return (
     <div className="landing">
       <section className="hero">
@@ -25,11 +26,14 @@ export function Landing({ joining }: { joining: boolean }) {
             Guess how things turn out. Wrong? You owe the challenge your group agreed on, and your friends confirm you did
             it. No money, ever: just honor, ranks and a record nobody can erase.
           </p>
-          {joining && <p className="note">Connect a wallet to accept your invite.</p>}
+          {joining && <p className="note">Sign in to accept your invite.</p>}
           <div className="hero-cta">
-            <WalletMultiButton>{joining ? "Connect to join" : "Enter the hall"}</WalletMultiButton>
+            <button className="btn btn-gold btn-google" onClick={() => auth.login()}>
+              <GoogleMark />
+              {joining ? "Continue with Google to join" : "Continue with Google"}
+            </button>
           </div>
-          <p className="muted small">No wallet? Pick “Demo Wallet” to try it instantly on the test network.</p>
+          <p className="muted small">Free to play. No wallet, no crypto, no setup: just your Google account.</p>
         </div>
         <div className="hero-art" aria-hidden>
           <div className="hero-glow" />
@@ -64,5 +68,16 @@ export function Landing({ joining }: { joining: boolean }) {
         </ol>
       </section>
     </div>
+  );
+}
+
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden>
+      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17z" />
+      <path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z" />
+      <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
+    </svg>
   );
 }

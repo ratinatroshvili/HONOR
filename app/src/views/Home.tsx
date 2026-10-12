@@ -3,7 +3,9 @@ import type { PublicKey } from "@solana/web3.js";
 import { RULES, actions, fetchMyGroups, fullName, honorRate, randomInviteCode, type Group, type With } from "../honor";
 import { Knight } from "../Knight";
 import { rankOf } from "../ranks";
-import { go, store, useHonor, useLoad } from "../state";
+import { go, store, useHonor, useLoad, useNow } from "../state";
+import { SELF_PAY_LAMPORTS, topUpWithPhantom } from "../sponsor";
+import { useConnection } from "@solana/wallet-adapter-react";
 
 export function Home() {
   const { profile, program, me, run, busy } = useHonor();
@@ -98,6 +100,8 @@ export function Home() {
           <dd>{p.shields}</dd>
         </div>
       </dl>
+
+      <Purse />
 
       <section className="armory panel">
         <div className="armory-icon" aria-hidden>
@@ -206,5 +210,78 @@ function GroupCard({ g }: { g: With<Group> }) {
         </span>
       </a>
     </li>
+  );
+}
+
+const PLAYS: [string, string, string][] = [
+  ["predict", "Bets", "bets"],
+  ["join_group", "Group join", "joins"],
+  ["create_group", "New group", "groups"],
+  ["create_round", "New round", "rounds"],
+];
+
+/** Free plays from the game's bank, and topping up your own game wallet with Phantom. */
+function Purse() {
+  const { connection } = useConnection();
+  const { me, freePlays, balance, run, busy } = useHonor();
+  const now = useNow(60000);
+  const [amount, setAmount] = useState(0.1);
+  const selfPaying = balance !== null && balance >= SELF_PAY_LAMPORTS;
+  const midnight = Math.ceil(now / 86400) * 86400;
+  const hours = Math.max(1, Math.round((midnight - now) / 3600));
+
+  return (
+    <section className="purse panel" aria-labelledby="purse">
+      <div className="purse-head">
+        <h2 id="purse" className="section-title">
+          Free plays today
+        </h2>
+        <span className="muted small">Resets in about {hours} h</span>
+      </div>
+      {selfPaying ? (
+        <p>
+          You're paying your own way: <strong>{(balance! / 1e9).toFixed(3)} SOL</strong> in your game wallet. Free plays kick in
+          again when it runs low.
+        </p>
+      ) : freePlays ? (
+        <ul className="plays">
+          {PLAYS.map(([kind, label]) => {
+            const limit = freePlays.limits[kind] ?? 0;
+            const left = Math.max(0, limit - (freePlays.used[kind] ?? 0));
+            return (
+              <li key={kind} className={left === 0 ? "spent" : ""}>
+                <strong>
+                  {left}/{limit}
+                </strong>
+                <span>{label}</span>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="muted">Free plays aren't available right now.</p>
+      )}
+      <p className="muted small">
+        Voting on results, proof and reviews are always free. Want more bets? Add SOL to your game wallet with Phantom, and you
+        keep your profile and honor.
+      </p>
+      <div className="actions">
+        <select value={amount} onChange={(e) => setAmount(Number(e.target.value))} aria-label="Amount">
+          {[0.1, 0.5, 1].map((v) => (
+            <option key={v} value={v}>
+              {v} SOL
+            </option>
+          ))}
+        </select>
+        <button
+          className="btn btn-quiet"
+          disabled={busy || !me}
+          onClick={() => run("Waiting for Phantom…", `Added ${amount} SOL to your game wallet.`, () => topUpWithPhantom(connection, me!, amount))}
+        >
+          Add SOL with Phantom
+        </button>
+      </div>
+      <p className="muted small">Test network: switch Phantom to devnet first (Settings, Developer settings, Testnet mode).</p>
+    </section>
   );
 }

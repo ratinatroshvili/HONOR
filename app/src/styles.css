@@ -100,8 +100,6 @@ button { font: inherit; }
   padding: 18px clamp(16px, 4vw, 40px); font-size: 0.85rem; color: var(--muted);
   border-top: 1px solid var(--line); background: rgba(13, 8, 32, 0.6);
 }
-.wallet-adapter-button-trigger { background: var(--violet-deep) !important; border-radius: 999px !important; height: 40px !important; }
-.wallet-adapter-button-trigger:hover { background: var(--violet) !important; }
 
 /* ---------- type ---------- */
 .display {
@@ -199,11 +197,6 @@ input[type="file"] { color: var(--muted); }
 /* ---------- landing ---------- */
 .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: center; min-height: min(60vh, 620px); }
 .hero-copy { display: flex; flex-direction: column; gap: 18px; }
-.hero-cta .wallet-adapter-button-trigger {
-  height: 52px !important; padding: 0 28px !important; font-size: 1.05rem !important;
-  background: linear-gradient(180deg, var(--gold-2), var(--gold)) !important; color: #2a1a00 !important;
-  box-shadow: 0 8px 30px rgba(232, 181, 42, 0.35);
-}
 .hero-art { position: relative; display: grid; place-items: center; }
 .hero-art .knight { position: relative; animation: float 6s ease-in-out infinite; }
 .hero-glow {
@@ -467,3 +460,20 @@ input[type="file"] { color: var(--muted); }
   .podium .rank-tag { display: none; }
   .opt-edit input { width: 130px; }
 }
+
+/* ---------- sign-in ---------- */
+.btn-google { gap: 12px; padding: 14px 26px; font-size: 1.05rem; }
+.btn-google svg { background: #fff; border-radius: 50%; padding: 3px; width: 26px; height: 26px; }
+.btn-sm { padding: 7px 14px; font-size: 0.9rem; }
+
+/* ---------- free plays ---------- */
+.purse { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.purse-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.purse-head .section-title { margin-bottom: 0; }
+.plays { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.plays li { display: flex; flex-direction: column; padding: 10px 14px; border-radius: var(--r-sm); background: rgba(13, 8, 32, 0.55); border: 1px solid var(--line-2); }
+.plays strong { font: 800 1.4rem/1.1 var(--display); color: var(--gold-2); }
+.plays li.spent { opacity: 0.5; }
+.plays li.spent strong { color: var(--muted); }
+.purse select { width: auto; }
+@media (max-width: 640px) { .plays { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

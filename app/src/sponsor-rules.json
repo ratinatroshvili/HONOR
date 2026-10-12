@@ -1,0 +1,27 @@
+{
+  "comment": "Which actions the hidden SOL bank pays for. Shared by the app (src/sponsor.ts) and the bank function (netlify/functions/sponsor.mjs). Daily limits reset at midnight UTC. Account sizes are bytes of the accounts each instruction creates (the bank pays their rent).",
+  "dailyLimits": { "predict": 3, "join_group": 1, "create_group": 1, "create_round": 1 },
+  "alwaysFree": [
+    "create_profile",
+    "vote_outcome",
+    "finalize_outcome",
+    "settle_prediction",
+    "submit_proof",
+    "review_proof",
+    "decline_challenge",
+    "use_shield",
+    "expire_challenge",
+    "buy_shield",
+    "rotate_invite",
+    "archive_group"
+  ],
+  "maxFreeTransactionsPerDay": 60,
+  "createdAccountSizes": {
+    "create_profile": [190],
+    "create_group": [146, 97],
+    "join_group": [97],
+    "create_round": [592],
+    "predict": [344],
+    "review_proof": [83]
+  }
+}

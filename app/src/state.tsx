@@ -1,16 +1,23 @@
-// App-wide state: the program client, the connected user, their profile, and a helper
-// that runs a blockchain action with a toast and refreshes the screen afterwards.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import type { PublicKey } from "@solana/web3.js";
+// App-wide state: the program client, the signed-in player, their profile, free plays from the
+// hidden SOL bank, and a helper that runs a game action with a toast and refreshes the screen.
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { errorMessage, fetchProfile, makeProgram, type HonorProgram, type Profile } from "./honor";
+import { useLogin, type Login } from "./login";
+import { fetchFreePlays, makeSponsor, type FreePlays } from "./sponsor";
 
 type Toast = { id: number; kind: "busy" | "ok" | "error"; text: string };
 
 type Ctx = {
+  auth: Login;
   program: HonorProgram;
   me: PublicKey | null;
   profile: Profile | null | undefined; // undefined = still loading
+  /** Today's free plays from the bank, or null if the bank isn't reachable. */
+  freePlays: FreePlays | null;
+  /** The player's own SOL balance in lamports. */
+  balance: number | null;
   version: number; // bumps after every successful action, so views reload
   refresh: () => void;
   run: (label: string, done: string, fn: () => Promise<unknown>) => Promise<boolean>;
@@ -22,17 +29,39 @@ const HonorCtx = createContext<Ctx | null>(null);
 
 export function HonorProvider({ children }: { children: ReactNode }) {
   const { connection } = useConnection();
-  const wallet = useAnchorWallet();
-  const program = useMemo(() => makeProgram(connection, wallet), [connection, wallet]);
+  const auth = useLogin();
+  const wallet = auth.wallet;
   const me = wallet?.publicKey ?? null;
-  // Tagged with its owner, so switching wallets never shows the previous wallet's profile.
+  const [version, setVersion] = useState(0);
+  const refresh = useCallback(() => setVersion((v) => v + 1), []);
+
+  // Free plays from the hidden SOL bank (see sponsor.ts), refreshed with everything else.
+  const tokenRef = useRef(auth.getAccessToken);
+  tokenRef.current = auth.getAccessToken;
+  const [freePlays, setFreePlays] = useState<FreePlays | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+  useEffect(() => {
+    let live = true;
+    if (!me) return;
+    tokenRef.current().then(fetchFreePlays).then((f) => live && setFreePlays(f));
+    connection.getBalance(me).then((b) => live && setBalance(b), () => {});
+    return () => {
+      live = false;
+    };
+  }, [me, connection, version]);
+
+  const bank = freePlays?.bank ?? null;
+  const sponsor = useMemo(
+    () => (wallet && bank ? makeSponsor(connection, wallet, new PublicKey(bank), () => tokenRef.current()) : undefined),
+    [connection, wallet, bank],
+  );
+  const program = useMemo(() => makeProgram(connection, wallet, sponsor), [connection, wallet, sponsor]);
+
+  // Tagged with its owner, so switching accounts never shows the previous player's profile.
   const [loaded, setLoaded] = useState<{ owner: string; profile: Profile | null } | null>(null);
   const profile = me && loaded?.owner === me.toBase58() ? loaded.profile : undefined;
-  const [version, setVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
-
-  const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
   // Pick up friends' moves: reload every 15 s while the tab is visible, and when you come back to it.
   useEffect(() => {
@@ -74,7 +103,7 @@ export function HonorProvider({ children }: { children: ReactNode }) {
         return true;
       } catch (e) {
         console.error(e);
-        toast({ kind: "error", text: errorMessage(e) }, 7000);
+        toast({ kind: "error", text: errorMessage(e) }, 9000);
         return false;
       } finally {
         setBusy(false);
@@ -84,7 +113,9 @@ export function HonorProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <HonorCtx.Provider value={{ program, me, profile, version, refresh, run, busy, toasts }}>{children}</HonorCtx.Provider>
+    <HonorCtx.Provider value={{ auth, program, me, profile, freePlays, balance, version, refresh, run, busy, toasts }}>
+      {children}
+    </HonorCtx.Provider>
   );
 }
 

@@ -6,9 +6,11 @@ import { useHonor } from "../state";
 const fits = (s: string) => s.trim().length > 0 && new TextEncoder().encode(s.trim()).length <= 32;
 
 export function Onboarding() {
-  const { program, me, run, busy } = useHonor();
-  const [first, setFirst] = useState("");
-  const [last, setLast] = useState("");
+  const { auth, program, me, run, busy } = useHonor();
+  // Prefill from the Google account; players can still edit both names.
+  const [googleFirst, ...googleRest] = (auth.googleName ?? "").trim().split(/\s+/);
+  const [first, setFirst] = useState(googleFirst ?? "");
+  const [last, setLast] = useState(googleRest.join(" "));
   const valid = fits(first) && fits(last);
 
   return (
@@ -43,8 +45,7 @@ export function Onboarding() {
           Swear in as a Squire
         </button>
         <p className="muted small">
-          Both names are required. Creating a profile needs a tiny network fee: on the test network, use “Get test SOL for
-          fees” at the bottom of the page first.
+          Both names are required. They're public on the leaderboards.
         </p>
       </form>
     </section>

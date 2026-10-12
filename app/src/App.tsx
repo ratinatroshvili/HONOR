@@ -1,7 +1,3 @@
-import { useState } from "react";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { CLUSTER } from "./honor";
 import { rankOf } from "./ranks";
 import { Knight } from "./Knight";
@@ -23,12 +19,14 @@ export function App() {
 }
 
 function Shell() {
-  const { me, profile, toasts } = useHonor();
+  const { auth, me, profile, toasts } = useHonor();
   const route = useRoute();
 
   // Pages are keyed by route so their local state (forms, invite codes) never leaks between pages.
   let page;
-  if (!me) page = <Landing joining={route[0] === "join"} />;
+  if (!auth.ready) page = <p className="muted pad center">Opening the hall…</p>;
+  else if (!auth.authenticated) page = <Landing joining={route[0] === "join"} />;
+  else if (!me) page = <p className="muted pad center">Setting up your account…</p>;
   else if (profile === undefined) page = <p className="muted pad center">Loading your profile…</p>;
   else if (profile === null) page = <Onboarding />;
   else if (route[0] === "g" && route[1]) page = <GroupView key={route[1]} groupKey={route[1]} />;
@@ -75,13 +73,16 @@ function Shell() {
               </span>
             </span>
           )}
-          {me && <WalletMultiButton />}
+          {auth.authenticated && (
+            <button className="btn btn-quiet btn-sm" onClick={() => auth.logout()}>
+              Sign out
+            </button>
+          )}
         </div>
       </header>
       <main className="main">{page}</main>
       <footer className="foot">
         <span>Running on Solana {CLUSTER}. No money is ever at stake: points can't be bought, sold or sent.</span>
-        {me && CLUSTER !== "mainnet-beta" && <Faucet />}
       </footer>
       <div className="toasts" role="status" aria-live="polite">
         {toasts.map((t) => (
@@ -92,31 +93,5 @@ function Shell() {
         ))}
       </div>
     </div>
-  );
-}
-
-function Faucet() {
-  const { connection } = useConnection();
-  const { me, run } = useHonor();
-  const [bal, setBal] = useState<number | null>(null);
-  const check = () => me && connection.getBalance(me).then((b) => setBal(b / LAMPORTS_PER_SOL));
-  return (
-    <span className="faucet">
-      <button
-        className="link"
-        onClick={() =>
-          run("Requesting test SOL…", "Got 1 test SOL for network fees.", async () => {
-            const sig = await connection.requestAirdrop(me!, LAMPORTS_PER_SOL);
-            await connection.confirmTransaction(sig, "confirmed");
-            await check();
-          }).then((ok) => {
-            if (!ok && CLUSTER === "devnet") window.open("https://faucet.solana.com", "_blank");
-          })
-        }
-      >
-        Get test SOL for fees
-      </button>
-      {bal !== null && <span className="muted"> (balance {bal.toFixed(2)} SOL)</span>}
-    </span>
   );
 }
