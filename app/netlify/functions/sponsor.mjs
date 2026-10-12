@@ -119,7 +119,7 @@ export default async (req) => {
   // 4. Daily limits.
   const total = (used.total ?? 0) + 1;
   if (total > rules.maxFreeTransactionsPerDay)
-    return json(402, { error: "You've used all of today's free plays. Add SOL with Phantom, or come back tomorrow.", limitReached: true });
+    return json(402, { error: "Daily limit reached: you've used all of today's free plays. They reset at midnight (UTC). To keep going now, add SOL to your game wallet with Phantom in My hall.", limitReached: true });
   for (const [kind, n] of Object.entries(counts)) {
     const limit = rules.dailyLimits[kind];
     if (limit !== undefined && (used[kind] ?? 0) + n > limit)
@@ -159,6 +159,12 @@ function toPem(raw) {
 }
 
 function limitMessage(kind, limit) {
-  const what = { predict: "bets", join_group: "group join", create_group: "new group", create_round: "new round" }[kind] ?? "plays";
-  return `You've used today's free ${limit === 1 ? "" : `${limit} `}${what}. Add SOL with Phantom to keep going, or come back tomorrow.`;
+  const what =
+    {
+      predict: `${limit} free bets`,
+      join_group: `${limit} free group join`,
+      create_group: `${limit} free new group`,
+      create_round: `${limit} free new round`,
+    }[kind] ?? "free plays";
+  return `Daily limit reached: you get ${what} a day, and you've used today's. It resets at midnight (UTC). To keep going now, add SOL to your game wallet with Phantom in My hall.`;
 }
