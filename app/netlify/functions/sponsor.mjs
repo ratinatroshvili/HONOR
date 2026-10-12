@@ -30,13 +30,18 @@ export default async (req) => {
   const { PRIVY_APP_ID, PRIVY_APP_SECRET, PRIVY_VERIFICATION_KEY, BANK_SECRET_KEY } = process.env;
   if (!PRIVY_APP_ID || !PRIVY_APP_SECRET || !PRIVY_VERIFICATION_KEY || !BANK_SECRET_KEY)
     return json(500, { error: "The game's bank isn't set up yet." });
-  const bank = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(BANK_SECRET_KEY)));
+  let bank;
+  try {
+    bank = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(BANK_SECRET_KEY)));
+  } catch {
+    return json(500, { error: "The game's bank key is set up wrong (BANK_SECRET_KEY)." });
+  }
 
   // 1. Who is asking? Only a valid Privy (Google) login gets an answer.
   let userId;
   try {
     const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-    const key = await importSPKI(PRIVY_VERIFICATION_KEY.replace(/\\n/g, "\n"), "ES256");
+    const key = await importSPKI(toPem(PRIVY_VERIFICATION_KEY), "ES256");
     ({ payload: { sub: userId } } = await jwtVerify(token, key, { issuer: "privy.io", audience: PRIVY_APP_ID }));
   } catch {
     return json(401, { error: "Please sign in again." });
@@ -135,6 +140,16 @@ export default async (req) => {
   await store.setJSON(dayKey, next);
   return json(200, { signature, used: next });
 };
+
+// Netlify's value fields are single-line, so the key may arrive with its line breaks turned into
+// spaces, "\n" text, or nothing. Rebuild a proper PEM from whatever was pasted.
+function toPem(raw) {
+  const body = raw
+    .replace(/\\n/g, " ")
+    .replace(/-----(BEGIN|END) PUBLIC KEY-----/g, "")
+    .replace(/\s+/g, "");
+  return `-----BEGIN PUBLIC KEY-----\n${body.match(/.{1,64}/g).join("\n")}\n-----END PUBLIC KEY-----`;
+}
 
 function limitMessage(kind, limit) {
   const what = { predict: "bets", join_group: "group join", create_group: "new group", create_round: "new round" }[kind] ?? "plays";
