@@ -3,8 +3,9 @@
   base = "app"
   command = "npm run build"
   publish = "dist"
-  # The hidden SOL bank (netlify/functions/fund.mjs, relative to app/).
-  functions = "netlify/functions"
+  # The hidden SOL bank. The build bundles netlify/functions/sponsor.mjs with all its libraries
+  # into netlify/functions-dist/, so it runs on any Node version Netlify uses.
+  functions = "netlify/functions-dist"
 
 [build.environment]
   NODE_VERSION = "22"
