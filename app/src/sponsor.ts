@@ -48,10 +48,12 @@ export async function fetchFreePlays(token: string | null): Promise<FreePlaysRes
 }
 
 /** Sends a game transaction through the bank: the bank pays the fee and the exact rent it needs. */
+// Account costs only change with network upgrades; look each size up once per visit.
+const rentCache = new Map<number, Promise<number>>();
+
 export function makeSponsor(connection: Connection, wallet: AnchorWallet, bank: PublicKey, getToken: () => Promise<string | null>): Sponsor {
-  const rentCache = new Map<number, number>();
-  const rentFor = async (size: number) => {
-    if (!rentCache.has(size)) rentCache.set(size, await connection.getMinimumBalanceForRentExemption(size));
+  const rentFor = (size: number) => {
+    if (!rentCache.has(size)) rentCache.set(size, connection.getMinimumBalanceForRentExemption(size).catch((e) => (rentCache.delete(size), Promise.reject(e))));
     return rentCache.get(size)!;
   };
   return async (original) => {

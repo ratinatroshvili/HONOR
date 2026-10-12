@@ -2,6 +2,7 @@ import { CLUSTER } from "./honor";
 import { rankOf } from "./ranks";
 import { Knight } from "./Knight";
 import { HonorProvider, useHonor, useRoute } from "./state";
+import { hasSavedSession } from "./login";
 import { Landing } from "./views/Landing";
 import { Onboarding } from "./views/Onboarding";
 import { Home } from "./views/Home";
@@ -24,7 +25,8 @@ function Shell() {
 
   // Pages are keyed by route so their local state (forms, invite codes) never leaks between pages.
   let page;
-  if (!auth.ready) page = <p className="muted pad center">Opening the hall…</p>;
+  // Visitors see the landing page at once; returning players see a short "opening" message.
+  if (!auth.ready) page = hasSavedSession() ? <p className="muted pad center">Opening the hall…</p> : <Landing joining={route[0] === "join"} />;
   else if (!auth.authenticated) page = <Landing joining={route[0] === "join"} />;
   else if (!me) page = <p className="muted pad center">Setting up your account…</p>;
   else if (profile === undefined) page = <p className="muted pad center">Loading your profile…</p>;

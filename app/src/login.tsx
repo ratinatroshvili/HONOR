@@ -1,8 +1,12 @@
 // Google login through Privy. Privy gives every player a Solana wallet behind their Google
 // account; this file turns it into the wallet shape the Anchor client expects, signing silently.
+//
+// Speed: the player's address comes straight from their Privy account, so their profile and
+// groups load immediately. Privy's signing wallet loads in the background and is only awaited
+// when an action actually needs a signature.
 import { useMemo, useRef } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useSignTransaction, useWallets } from "@privy-io/react-auth/solana";
+import { useSignTransaction, useWallets, type ConnectedStandardSolanaWallet } from "@privy-io/react-auth/solana";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
 import { CLUSTER } from "./honor";
@@ -24,25 +28,44 @@ export type Login = {
   getAccessToken: () => Promise<string | null>;
 };
 
+/** True when this browser has a Privy session, so we can show "loading" instead of the landing page. */
+export function hasSavedSession() {
+  try {
+    return Object.keys(localStorage).some((k) => k.startsWith("privy:") && k.includes("token"));
+  } catch {
+    return false;
+  }
+}
+
 export function useLogin(): Login {
   const { ready, authenticated, user, login, logout, getAccessToken } = usePrivy();
-  const { wallets, ready: walletsReady } = useWallets();
+  const { wallets } = useWallets();
   const { signTransaction } = useSignTransaction();
-  // Only the wallet Privy created for this player (Google is the only login, so it's the only one).
-  const privyWallet = authenticated ? wallets.find((w) => w.standardWallet.name === "Privy") ?? wallets[0] : undefined;
-  const address = privyWallet?.address;
-  // Always sign with the latest wallet object, while keeping the AnchorWallet stable per address.
-  const latest = useRef(privyWallet);
-  latest.current = privyWallet;
+
+  // The address is on the player's Privy account as soon as they're signed in.
+  const linked = user?.linkedAccounts.find(
+    (a) => a.type === "wallet" && a.chainType === "solana" && (a.walletClientType === "privy" || a.connectorType === "embedded"),
+  );
+  const signer = authenticated ? wallets.find((w) => w.standardWallet.name === "Privy") ?? wallets[0] : undefined;
+  const address = authenticated ? (linked && "address" in linked ? linked.address : signer?.address) : undefined;
+
+  // Always sign with the latest signing wallet, while keeping the AnchorWallet stable per address.
+  const latest = useRef<ConnectedStandardSolanaWallet | undefined>(signer);
+  latest.current = signer;
 
   const wallet = useMemo<AnchorWallet | undefined>(() => {
     if (!address) return undefined;
+    const waitForSigner = async () => {
+      for (let i = 0; i < 150 && !latest.current; i++) await new Promise((r) => setTimeout(r, 100));
+      if (!latest.current) throw new Error("Your account is still loading. Try again in a moment.");
+      return latest.current;
+    };
     const sign = async <T extends AnyTx>(tx: T): Promise<T> => {
       const bytes =
         tx instanceof VersionedTransaction ? tx.serialize() : tx.serialize({ requireAllSignatures: false, verifySignatures: false });
       const { signedTransaction } = await signTransaction({
         transaction: bytes,
-        wallet: latest.current!,
+        wallet: await waitForSigner(),
         chain: CHAIN,
         options: { uiOptions: { showWalletUIs: false } },
       });
@@ -60,7 +83,7 @@ export function useLogin(): Login {
   }, [address, signTransaction]);
 
   return {
-    ready: ready && (!authenticated || walletsReady),
+    ready,
     authenticated,
     wallet,
     googleName: user?.google?.name ?? null,

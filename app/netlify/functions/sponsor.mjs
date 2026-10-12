@@ -55,19 +55,26 @@ export default async (req) => {
   if (req.method === "GET") return json(200, status);
   if (req.method !== "POST") return json(405, { error: "Use GET or POST" });
 
-  // 2. Which wallet is theirs? Ask Privy, so nobody can make the bank pay for someone else.
-  const res = await fetch(`https://api.privy.io/v1/users/${encodeURIComponent(userId)}`, {
-    headers: {
-      "privy-app-id": PRIVY_APP_ID,
-      authorization: `Basic ${Buffer.from(`${PRIVY_APP_ID}:${PRIVY_APP_SECRET}`).toString("base64")}`,
-    },
-  });
-  if (!res.ok) return json(502, { error: "Couldn't reach the login service. Try again in a minute." });
-  const account = ((await res.json()).linked_accounts ?? []).find(
-    (a) => a.type === "wallet" && a.chain_type === "solana" && (a.connector_type === "embedded" || a.wallet_client_type === "privy"),
-  );
-  if (!account) return json(409, { error: "Your account is still being set up. Try again in a few seconds." });
-  const player = new PublicKey(account.address);
+  // 2. Which wallet is theirs? Ask Privy once, then remember it: a player's wallet never changes.
+  // This stops anyone making the bank pay for someone else's address.
+  const walletKey = `wallet/${userId}`;
+  let address = await store.get(walletKey);
+  if (!address) {
+    const res = await fetch(`https://api.privy.io/v1/users/${encodeURIComponent(userId)}`, {
+      headers: {
+        "privy-app-id": PRIVY_APP_ID,
+        authorization: `Basic ${Buffer.from(`${PRIVY_APP_ID}:${PRIVY_APP_SECRET}`).toString("base64")}`,
+      },
+    });
+    if (!res.ok) return json(502, { error: "Couldn't reach the login service. Try again in a minute." });
+    const account = ((await res.json()).linked_accounts ?? []).find(
+      (a) => a.type === "wallet" && a.chain_type === "solana" && (a.connector_type === "embedded" || a.wallet_client_type === "privy"),
+    );
+    if (!account) return json(409, { error: "Your account is still being set up. Try again in a few seconds." });
+    address = account.address;
+    await store.set(walletKey, address);
+  }
+  const player = new PublicKey(address);
 
   // 3. Check the transaction strictly.
   let tx;

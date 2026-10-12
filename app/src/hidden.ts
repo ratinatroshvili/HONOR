@@ -5,4 +5,5 @@ export const HIDDEN_PLAYERS = new Set<string>([
   "2oALGizZZioeJ7oXXkkiS3C3i6fqZBbtSuHSfAMp4pN8", // Rati Beridze
   "8wDXpeQxbauvJ3TQxGi9cmWpYmrFrUKmjichsz4CLJXQ", // toko menabde
   "FnWcKVKhdhoTMqt7j1uTFo1C8hAsFN6SKWPHJ54nGMnk", // Test Player (bank test)
+  "FK2YNgWxgU1HK8W7Pcj1UXQ5xrXKeR4ST9oWRceQ2zRT", // Test Player (bank test)
 ]);

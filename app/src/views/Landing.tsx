@@ -28,11 +28,12 @@ export function Landing({ joining }: { joining: boolean }) {
           </p>
           {joining && <p className="note">Sign in to accept your invite.</p>}
           <div className="hero-cta">
-            <button className="btn btn-gold btn-google" onClick={() => auth.login()}>
+            <button className="btn btn-gold btn-google" disabled={!auth.ready} onClick={() => auth.login()}>
               <GoogleMark />
               {joining ? "Continue with Google to join" : "Continue with Google"}
             </button>
-          </div>        </div>
+          </div>
+        </div>
         <div className="hero-art" aria-hidden>
           <div className="hero-glow" />
           <Knight rank="grandmaster" size={300} />
